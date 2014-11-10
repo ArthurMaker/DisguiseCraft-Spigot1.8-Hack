@@ -41,6 +41,7 @@ import pgDev.bukkit.DisguiseCraft.listeners.protocol.DCPacketInListener;
 import pgDev.bukkit.DisguiseCraft.listeners.protocol.PLPacketListener;
 import pgDev.bukkit.DisguiseCraft.mojangauth.EmptyUUIDS;
 import pgDev.bukkit.DisguiseCraft.mojangauth.ProfileCache;
+import pgDev.bukkit.DisguiseCraft.packet.DCPacketGenerator;
 import pgDev.bukkit.DisguiseCraft.packet.MovementValues;
 import pgDev.bukkit.DisguiseCraft.stats.Metrics;
 import pgDev.bukkit.DisguiseCraft.stats.Metrics.Graph;
@@ -557,7 +558,7 @@ public class DisguiseCraft extends JavaPlugin {
     				if (pluginSettings.noTabHide && protocolHook == ProtocolHook.ProtocolLib) {
     					packetListener.recentlyDisguised.add(player.getName());
     				} else {
-    					toSend.add(new PacketPlayOutPlayerInfo(player.getName(), true, ((CraftPlayer) player).getHandle().ping));
+    					toSend.add(DCPacketGenerator.createPlayerInfo(player.getName(), ((CraftPlayer) player).getHandle().ping));
     				}
     			} else {
     				toSend.addFirst(disguise.packetGenerator.getSpawnPacket(player, null));
@@ -607,7 +608,7 @@ public class DisguiseCraft extends JavaPlugin {
     		    			if (pluginSettings.noTabHide && protocolHook == ProtocolHook.ProtocolLib) {
     		    				packetListener.recentlyDisguised.add(player.getName());
     		    			} else {
-    		    				toSend.add(new PacketPlayOutPlayerInfo(player.getName(), true, ((CraftPlayer) player).getHandle().ping));
+    		    				toSend.add(DCPacketGenerator.createPlayerInfo(player.getName(), ((CraftPlayer) player).getHandle().ping));
     		    			}
     					} else {
     						toSend.addFirst(disguise.packetGenerator.getSpawnPacket(player, null));
@@ -719,7 +720,8 @@ public class DisguiseCraft extends JavaPlugin {
 					disguiseToPlayer(disguised, observer);
 
 					if (pluginSettings.noTabHide && protocolHook == ProtocolHook.ProtocolLib) {
-						((CraftPlayer) observer).getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(getServer().getPlayer(disguisedUID).getName(), true, ((CraftPlayer) disguised).getHandle().ping));
+						PacketPlayOutPlayerInfo info = DCPacketGenerator.createPlayerInfo(getServer().getPlayer(disguisedUID).getName(), ((CraftPlayer) disguised).getHandle().ping);
+						((CraftPlayer) observer).getHandle().playerConnection.sendPacket(info);
 					}
 				}
 			}

@@ -5,30 +5,13 @@ import java.util.LinkedList;
 import java.util.UUID;
 import java.util.logging.Level;
 
-import net.minecraft.server.v1_7_R4.DataWatcher;
-import net.minecraft.server.v1_7_R4.MathHelper;
-import net.minecraft.server.v1_7_R4.Packet;
-import net.minecraft.server.v1_7_R4.PacketPlayOutAnimation;
-import net.minecraft.server.v1_7_R4.PacketPlayOutPlayerInfo;
-import net.minecraft.server.v1_7_R4.PacketPlayOutNamedEntitySpawn;
-import net.minecraft.server.v1_7_R4.PacketPlayOutCollect;
-import net.minecraft.server.v1_7_R4.PacketPlayOutSpawnEntity;
-import net.minecraft.server.v1_7_R4.PacketPlayOutSpawnEntityLiving;
-import net.minecraft.server.v1_7_R4.PacketPlayOutEntityVelocity;
-import net.minecraft.server.v1_7_R4.PacketPlayOutEntityDestroy;
-import net.minecraft.server.v1_7_R4.PacketPlayOutEntityLook;
-import net.minecraft.server.v1_7_R4.PacketPlayOutRelEntityMoveLook;
-import net.minecraft.server.v1_7_R4.PacketPlayOutEntityTeleport;
-import net.minecraft.server.v1_7_R4.PacketPlayOutEntityHeadRotation;
-import net.minecraft.server.v1_7_R4.PacketPlayOutEntityStatus;
-import net.minecraft.server.v1_7_R4.PacketPlayOutEntityMetadata;
-import net.minecraft.server.v1_7_R4.PacketPlayOutEntityEquipment;
+import net.minecraft.server.v1_7_R4.*;
 import net.minecraft.util.com.mojang.authlib.GameProfile;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
 import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_7_R4.inventory.CraftItemStack;
 
@@ -37,6 +20,9 @@ import pgDev.bukkit.DisguiseCraft.disguise.*;
 import pgDev.bukkit.DisguiseCraft.mojangauth.ProfileCache;
 
 public class DCPacketGenerator {
+	
+	
+	
 	final Disguise d;
 	
 	protected int encposX;
@@ -283,7 +269,7 @@ public class DCPacketGenerator {
 	
 	public PacketPlayOutEntityLook getEntityLookPacket(Location loc) {
 		byte[] yp = getYawPitch(loc);
-		return new PacketPlayOutEntityLook(d.entityID, yp[0], yp[1]);
+		return new PacketPlayOutEntityLook(d.entityID, yp[0], yp[1], false);
 	}
 	
 	public PacketPlayOutRelEntityMoveLook getEntityMoveLookPacket(Location loc) {
@@ -296,7 +282,7 @@ public class DCPacketGenerator {
 		
 		return new PacketPlayOutRelEntityMoveLook(d.entityID,
 				(byte) movement.x, (byte) movement.y, (byte) movement.z,
-				yp[0], yp[1]);
+				yp[0], yp[1], false);
 	}
 	
 	public PacketPlayOutEntityTeleport getEntityTeleportPacket(Location loc) {
@@ -312,11 +298,35 @@ public class DCPacketGenerator {
 		
 		return new PacketPlayOutEntityTeleport(d.entityID,
 				x, y, z,
-				yp[0], yp[1]);
+				yp[0], yp[1], false, false);
 	}
 	
 	public PacketPlayOutEntityMetadata getEntityMetadataPacket() {
 		return new PacketPlayOutEntityMetadata(d.entityID, (DataWatcher) d.metadata, true); // 1.4.2 update: true-same method as 1.3.2
+	}
+	
+	public static PacketPlayOutPlayerInfo createPlayerInfo(String name, int ping){
+		PacketPlayOutPlayerInfo pack = new PacketPlayOutPlayerInfo();
+		GameProfile pinfo = new GameProfile(DisguiseCraft.profileCache.retrieveUUID(name), name);
+		
+		try {
+			Field gameProfile = PacketPlayOutPlayerInfo.class.getDeclaredField("player");
+			gameProfile.setAccessible(true);
+			gameProfile.set(pack, pinfo);
+			
+			Field username = PacketPlayOutPlayerInfo.class.getDeclaredField("username");
+			username.setAccessible(true);
+			username.set(pack, name);
+			
+			Field pingF = PacketPlayOutPlayerInfo.class.getDeclaredField("ping");
+			pingF.setAccessible(true);
+			pingF.setInt(pack, ping);
+		} catch(Exception e){
+			DisguiseCraft.logger.log(Level.SEVERE, "Failed to modify fields using reflection", e);
+		}
+		
+		
+		return pack;
 	}
 	
 	public PacketPlayOutPlayerInfo getPlayerInfoPacket(Player player, boolean show) {
@@ -328,7 +338,8 @@ public class DCPacketGenerator {
 				ping = 9999;
 			}
 			
-			return new PacketPlayOutPlayerInfo(d.data.getFirst(), show, ping);
+			return createPlayerInfo(d.data.getFirst(), ping);
+			
 		} else {
 			return null;
 		}
