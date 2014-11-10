@@ -7,3 +7,6 @@ This plugin was originally developed by Devil_Boy
 
 Original plugin page on Bukkit Dev:
 http://dev.bukkit.org/bukkit-plugins/disguisecraft/
+
+Compiled plugin download link:
+http://www.ithinkrok.com/downloads/DisguiseCraft-SpigotHack.jar
